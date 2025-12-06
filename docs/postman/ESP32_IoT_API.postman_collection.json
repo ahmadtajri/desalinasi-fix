@@ -1,0 +1,404 @@
+{
+    "info": {
+        "_postman_id": "esp32-iot-data-logger-v15",
+        "name": "ESP32 IoT Data Logger API",
+        "description": "API Collection untuk ESP32 IoT Data Logger - Monitoring dan logging data sensor desalinasi dengan 6 compartment",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Logger Control",
+            "item": [
+                {
+                    "name": "GET Logger Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{api_url}}/logger/status",
+                            "host": [
+                                "{{api_url}}"
+                            ],
+                            "path": [
+                                "logger",
+                                "status"
+                            ]
+                        },
+                        "description": "Mengecek status logger background (apakah sedang berjalan, interval, log counter)."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "POST Start Logger",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{api_url}}/logger/start",
+                            "host": [
+                                "{{api_url}}"
+                            ],
+                            "path": [
+                                "logger",
+                                "start"
+                            ]
+                        },
+                        "description": "Menyalakan logger background di server."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "POST Stop Logger",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{api_url}}/logger/stop",
+                            "host": [
+                                "{{api_url}}"
+                            ],
+                            "path": [
+                                "logger",
+                                "stop"
+                            ]
+                        },
+                        "description": "Mematikan logger background di server."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "POST Config Logger",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"interval\": 5000\n}"
+                        },
+                        "url": {
+                            "raw": "{{api_url}}/logger/config",
+                            "host": [
+                                "{{api_url}}"
+                            ],
+                            "path": [
+                                "logger",
+                                "config"
+                            ]
+                        },
+                        "description": "Mengubah interval logger background (dalam milidetik)."
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Kontrol background logger di server"
+        },
+        {
+            "name": "Sensor Data",
+            "item": [
+                {
+                    "name": "GET All Sensors",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Response time is less than 500ms\", function () {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Response is array\", function () {",
+                                    "    pm.expect(pm.response.json()).to.be.an('array');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{api_url}}/sensors",
+                            "host": [
+                                "{{api_url}}"
+                            ],
+                            "path": [
+                                "sensors"
+                            ]
+                        },
+                        "description": "Mendapatkan semua data sensor dari database. Default limit 100 records."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET Sensors with Limit",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{api_url}}/sensors?limit=50",
+                            "host": [
+                                "{{api_url}}"
+                            ],
+                            "path": [
+                                "sensors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "50",
+                                    "description": "Jumlah maksimal data yang ditampilkan"
+                                }
+                            ]
+                        },
+                        "description": "Mendapatkan data sensor dengan limit tertentu (contoh: 50 records)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET Sensors by Compartment",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{api_url}}/sensors?compartment=1",
+                            "host": [
+                                "{{api_url}}"
+                            ],
+                            "path": [
+                                "sensors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "compartment",
+                                    "value": "1",
+                                    "description": "Filter data berdasarkan compartment ID (1-6)"
+                                }
+                            ]
+                        },
+                        "description": "Mendapatkan data sensor dari compartment tertentu (1-6)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET Sensors by Date Range",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{api_url}}/sensors?startDate=2025-11-30T00:00:00Z&endDate=2025-11-30T23:59:59Z",
+                            "host": [
+                                "{{api_url}}"
+                            ],
+                            "path": [
+                                "sensors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "startDate",
+                                    "value": "2025-11-30T00:00:00Z",
+                                    "description": "Tanggal mulai (ISO 8601 format)"
+                                },
+                                {
+                                    "key": "endDate",
+                                    "value": "2025-11-30T23:59:59Z",
+                                    "description": "Tanggal akhir (ISO 8601 format)"
+                                }
+                            ]
+                        },
+                        "description": "Mendapatkan data sensor dalam rentang waktu tertentu"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "POST Create Sensor Data",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 201\", function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "const responseJson = pm.response.json();",
+                                    "pm.environment.set(\"last_created_id\", responseJson.id);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        },
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "pm.environment.set(\"random_compartment\", Math.floor(Math.random() * 6) + 1);",
+                                    "pm.environment.set(\"random_temp_air\", (25 + Math.random() * 5).toFixed(1));",
+                                    "pm.environment.set(\"random_humidity\", (60 + Math.random() * 10).toFixed(1));",
+                                    "pm.environment.set(\"random_temp_water\", (20 + Math.random() * 5).toFixed(1));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"compartment_id\": {{random_compartment}},\n  \"temperature_air\": {{random_temp_air}},\n  \"humidity_air\": {{random_humidity}},\n  \"temperature_water\": {{random_temp_water}}\n}"
+                        },
+                        "url": {
+                            "raw": "{{api_url}}/sensors",
+                            "host": [
+                                "{{api_url}}"
+                            ],
+                            "path": [
+                                "sensors"
+                            ]
+                        },
+                        "description": "Menambahkan data sensor baru ke database. Data akan di-generate secara random."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "DELETE Single Sensor",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{api_url}}/sensors/{{last_created_id}}",
+                            "host": [
+                                "{{api_url}}"
+                            ],
+                            "path": [
+                                "sensors",
+                                "{{last_created_id}}"
+                            ]
+                        },
+                        "description": "Menghapus satu data sensor berdasarkan ID."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "DELETE by Interval",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{api_url}}/sensors/interval/5",
+                            "host": [
+                                "{{api_url}}"
+                            ],
+                            "path": [
+                                "sensors",
+                                "interval",
+                                "5"
+                            ]
+                        },
+                        "description": "Menghapus semua data yang memiliki interval logging tertentu (contoh: 5 detik)."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "DELETE All Sensors",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{api_url}}/sensors",
+                            "host": [
+                                "{{api_url}}"
+                            ],
+                            "path": [
+                                "sensors"
+                            ]
+                        },
+                        "description": "⚠️ HATI-HATI! Menghapus SEMUA data sensor dari database."
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Endpoint untuk operasi CRUD data sensor"
+        },
+        {
+            "name": "Error Handling Tests",
+            "item": [
+                {
+                    "name": "POST Missing Fields",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"compartment_id\": 1,\n  \"temperature_air\": 27.5\n}"
+                        },
+                        "url": {
+                            "raw": "{{api_url}}/sensors",
+                            "host": [
+                                "{{api_url}}"
+                            ],
+                            "path": [
+                                "sensors"
+                            ]
+                        },
+                        "description": "Test error handling ketika field required tidak lengkap"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "DELETE Non-existent Data",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{api_url}}/sensors/99999",
+                            "host": [
+                                "{{api_url}}"
+                            ],
+                            "path": [
+                                "sensors",
+                                "99999"
+                            ]
+                        },
+                        "description": "Test error handling ketika menghapus data yang tidak ada"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Test cases untuk error handling"
+        }
+    ],
+    "variable": [
+        {
+            "key": "api_url",
+            "value": "http://localhost:3000/api",
+            "type": "string"
+        },
+        {
+            "key": "base_url",
+            "value": "http://localhost:3000",
+            "type": "string"
+        }
+    ]
+}
