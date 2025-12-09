@@ -23,7 +23,7 @@ async function startServer() {
     console.log('');
 
     // Sync database (create tables if they don't exist)
-    await sequelize.sync({ alter: false });
+    await sequelize.sync({ alter: true });
     console.log('✅ Database synced');
     console.log('');
 

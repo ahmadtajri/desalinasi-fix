@@ -25,8 +25,12 @@ const SensorController = {
         try {
             const { compartment_id, temperature_air, humidity_air, temperature_water, interval } = req.body;
 
-            if (!compartment_id || !temperature_air || !humidity_air || !temperature_water) {
-                return res.status(400).json({ error: 'Missing required fields' });
+            // Relaxed validation: Check if compartment_id exists and AT LEAST ONE sensor value is present
+            if (!compartment_id) {
+                return res.status(400).json({ error: 'Missing compartment_id' });
+            }
+            if (!temperature_air && !humidity_air && !temperature_water) {
+                return res.status(400).json({ error: 'At least one sensor value (air temp, humidity, or water temp) is required' });
             }
 
             const newData = await DataService.createData({

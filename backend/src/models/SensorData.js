@@ -13,15 +13,15 @@ const SensorData = sequelize.define('SensorData', {
     },
     temperature_air: {
         type: DataTypes.FLOAT,
-        allowNull: false
+        allowNull: true
     },
     humidity_air: {
         type: DataTypes.FLOAT,
-        allowNull: false
+        allowNull: true
     },
     temperature_water: {
         type: DataTypes.FLOAT,
-        allowNull: false
+        allowNull: true
     },
     interval: {
         type: DataTypes.INTEGER,
