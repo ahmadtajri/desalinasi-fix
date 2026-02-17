@@ -37,7 +37,16 @@
   <!-- PWA Service Worker Registration -->
   <script>
     // Register service worker for PWA offline support
+    // IMPORTANT: PWA requires HTTPS (except localhost) for install prompt & service worker
     if ('serviceWorker' in navigator) {
+      const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+      
+      if (!isSecure) {
+        console.warn('[PWA] ⚠️ Running on HTTP - PWA install prompt will NOT appear.');
+        console.warn('[PWA] Setup HTTPS with Let\'s Encrypt for full PWA support.');
+        console.warn('[PWA] Run on VPS: sudo certbot --nginx -d yourdomain.com');
+      }
+      
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')
           .then(registration => {

@@ -12,9 +12,13 @@ export default defineConfig({
                 clientsClaim: true,
                 skipWaiting: true,
                 maximumFileSizeToCacheInBytes: 3000000, // 3MB
+                // Don't precache service-worker.js (we have our own)
+                navigateFallback: '/index.html',
+                navigateFallbackDenylist: [/^\/api\//],
                 runtimeCaching: [
                     {
-                        urlPattern: /^https:\/\/localhost:3000\/api\//,
+                        // Match API calls on any origin (production uses /api, dev uses :3000/api)
+                        urlPattern: /\/api\//,
                         handler: 'NetworkFirst',
                         options: {
                             cacheName: 'api-cache',

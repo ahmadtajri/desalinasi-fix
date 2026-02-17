@@ -1,6 +1,8 @@
 // Service Worker for PWA offline support and caching
+// NOTE: PWA install & service worker require HTTPS (except localhost)
+// Setup HTTPS with Let's Encrypt on your VPS for full PWA support
 
-const CACHE_NAME = 'iot-desalinasi-v1';
+const CACHE_NAME = 'iot-desalinasi-v2';
 const urlsToCache = [
   '/',
   '/index.html',

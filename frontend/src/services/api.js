@@ -1,19 +1,25 @@
 import axios from 'axios';
 
-// Automatically detect the correct API URL based on current hostname
-// This allows the app to work on both localhost and network IP
+// Automatically detect the correct API URL based on environment
+// Production: Use relative /api path (goes through Nginx reverse proxy on port 80/443)
+// Development: Use localhost:3000 directly
 const getApiBaseUrl = () => {
-    // Get current hostname (e.g., 'localhost' or '192.168.43.238')
     const hostname = window.location.hostname;
+    const port = window.location.port;
+    const protocol = window.location.protocol;
 
-    // Backend always runs on port 3000
-    const backendPort = 3000;
+    // Development mode: Vite dev server on port 5173 or similar dev ports
+    const isDev = port === '5173' || port === '5174' || hostname === 'localhost' && port !== '80' && port !== '443' && port !== '';
 
-    // Use the same hostname as frontend, but with backend port
-    // This ensures that:
-    // - localhost:5173 -> localhost:3000
-    // - 192.168.43.238:5173 -> 192.168.43.238:3000
-    return `http://${hostname}:${backendPort}/api`;
+    if (isDev) {
+        // In development, connect directly to backend on port 3000
+        return `http://${hostname}:3000/api`;
+    }
+
+    // Production: Use relative path (same origin, goes through Nginx reverse proxy)
+    // This ensures all requests go through Nginx (:80) → proxy to backend (:3000)
+    // Benefits: Security headers, rate limiting, no exposed backend port
+    return `${protocol}//${hostname}${port ? ':' + port : ''}/api`;
 };
 
 const api = axios.create({
