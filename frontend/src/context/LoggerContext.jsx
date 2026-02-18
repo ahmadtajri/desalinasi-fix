@@ -84,7 +84,7 @@ export const LoggerProvider = ({ children }) => {
 
     useEffect(() => {
         syncStatus();
-        const intervalId = setInterval(syncStatus, 5000);
+        const intervalId = setInterval(syncStatus, 10000); // Sync every 10 seconds
         return () => clearInterval(intervalId);
     }, []);
 
@@ -145,7 +145,7 @@ export const LoggerProvider = ({ children }) => {
         };
 
         fetchRealtimeData(); // Initial fetch
-        const intervalId = setInterval(fetchRealtimeData, 1000); // Fetch every 1 second
+        const intervalId = setInterval(fetchRealtimeData, 2000); // Fetch every 2 seconds
         return () => clearInterval(intervalId);
     }, []);
 

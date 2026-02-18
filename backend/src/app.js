@@ -65,9 +65,9 @@ app.use(cors({
 // General API rate limit
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 500,                 // Max 500 requests per 15 min per IP
-    message: {
-        success: false,
+    max: 1500,                // Max 1500 requests per 15 min per IP
+    message: {                // (IoT dashboard polls /sensors/realtime every 2s = ~450/15min,
+        success: false,       //  plus /logger/status, /backend check, etc.)
         message: 'Too many requests, please try again later.',
     },
     standardHeaders: true,
