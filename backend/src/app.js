@@ -33,6 +33,12 @@ const allowedOrigins = [
     'http://localhost',
     'http://72.61.214.239',        // VPS IP (via Nginx)
     'https://72.61.214.239',       // VPS IP (HTTPS future)
+    'http://iot.desalinasiac.cloud',     // ← tambah
+    'https://iot.desalinasiac.cloud',    // ← tambah
+    'http://desalinasiac.cloud',         // ← tambah
+    'https://desalinasiac.cloud',        // ← tambah
+    'http://www.desalinasiac.cloud',     // ← tambah
+    'https://www.desalinasiac.cloud',    // ← tambah
 ];
 
 app.use(cors({
