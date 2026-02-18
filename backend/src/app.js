@@ -16,6 +16,10 @@ const app = express();
 // SECURITY MIDDLEWARE
 // ============================================
 
+// 0. Trust proxy - PENTING untuk Nginx reverse proxy
+//    Tanpa ini, express-rate-limit error: ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
+app.set('trust proxy', 1);
+
 // 1. Remove X-Powered-By header (hides Express fingerprint)
 app.disable('x-powered-by');
 
@@ -28,17 +32,17 @@ app.use(helmet({
 
 // 3. CORS - Restrict allowed origins
 const allowedOrigins = [
-    'http://localhost:5173',       // Vite dev server
+    'http://localhost:5173',             // Vite dev server
     'http://localhost:5174',
     'http://localhost',
-    'http://72.61.214.239',        // VPS IP (via Nginx)
-    'https://72.61.214.239',       // VPS IP (HTTPS future)
-    'http://iot.desalinasiac.cloud',     // ← tambah
-    'https://iot.desalinasiac.cloud',    // ← tambah
-    'http://desalinasiac.cloud',         // ← tambah
-    'https://desalinasiac.cloud',        // ← tambah
-    'http://www.desalinasiac.cloud',     // ← tambah
-    'https://www.desalinasiac.cloud',    // ← tambah
+    'http://72.61.214.239',              // VPS IP (via Nginx)
+    'https://72.61.214.239',
+    'http://iot.desalinasiac.cloud',     // Domain utama
+    'https://iot.desalinasiac.cloud',
+    'http://desalinasiac.cloud',         // Root domain
+    'https://desalinasiac.cloud',
+    'http://www.desalinasiac.cloud',     // www subdomain
+    'https://www.desalinasiac.cloud',
 ];
 
 app.use(cors({
