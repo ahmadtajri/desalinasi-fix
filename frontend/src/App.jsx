@@ -118,7 +118,7 @@ function App() {
     React.useEffect(() => {
         // Initialize PWA features
         initPWA();
-        
+
         // Check backend connection
         autoCheckBackend().then(result => {
             if (result.status === 'online') {
@@ -131,24 +131,24 @@ function App() {
 
     return (
         <AuthProvider>
-            <LoggerProvider>
-                <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                    <Routes>
-                        {/* Public Route */}
-                        <Route path="/login" element={<LoginRoute />} />
+            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <Routes>
+                    {/* Public Route */}
+                    <Route path="/login" element={<LoginRoute />} />
 
-                        {/* Protected Routes */}
-                        <Route
-                            path="/*"
-                            element={
-                                <ProtectedRoute>
+                    {/* Protected Routes - LoggerProvider only active when authenticated */}
+                    <Route
+                        path="/*"
+                        element={
+                            <ProtectedRoute>
+                                <LoggerProvider>
                                     <AppLayout />
-                                </ProtectedRoute>
-                            }
-                        />
-                    </Routes>
-                </Router>
-            </LoggerProvider>
+                                </LoggerProvider>
+                            </ProtectedRoute>
+                        }
+                    />
+                </Routes>
+            </Router>
         </AuthProvider>
     );
 }
