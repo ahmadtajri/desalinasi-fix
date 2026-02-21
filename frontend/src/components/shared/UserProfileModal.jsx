@@ -1,28 +1,105 @@
-// User Profile Modal - Displays user info and allows password change
-import { useState } from 'react';
-import { X, User, Mail, Shield, Key, Eye, EyeOff, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+// User Profile Modal - Displays user info and allows account settings
+import { useState, useEffect } from 'react';
+import { X, User, Mail, Shield, Key, Eye, EyeOff, Loader2, CheckCircle, AlertCircle, Pencil, Save } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import authService from '../../services/authService';
 import PropTypes from 'prop-types';
 
 export default function UserProfileModal({ isOpen, onClose }) {
-    const { user } = useAuth();
+    const { user, isDefaultAdmin, refreshUser } = useAuth();
+
+    // Edit states
+    const [isEditingUsername, setIsEditingUsername] = useState(false);
+    const [isEditingEmail, setIsEditingEmail] = useState(false);
+    const [editUsername, setEditUsername] = useState('');
+    const [editEmail, setEditEmail] = useState('');
+
+    // Password states
     const [showChangePassword, setShowChangePassword] = useState(false);
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
+
+    // Loading and message
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
+    // Reset edit states when user changes
+    useEffect(() => {
+        if (user) {
+            setEditUsername(user.username || '');
+            setEditEmail(user.email || '');
+        }
+    }, [user]);
+
     if (!isOpen) return null;
+
+    const handleSaveUsername = async () => {
+        if (!editUsername.trim()) {
+            setMessage({ type: 'error', text: 'Username tidak boleh kosong.' });
+            return;
+        }
+        if (editUsername === user?.username) {
+            setIsEditingUsername(false);
+            return;
+        }
+
+        setLoading(true);
+        setMessage({ type: '', text: '' });
+
+        try {
+            const response = await authService.updateAccount({ username: editUsername.trim() });
+            if (response.success) {
+                setMessage({ type: 'success', text: 'Username berhasil diubah!' });
+                setIsEditingUsername(false);
+                await refreshUser();
+                setTimeout(() => setMessage({ type: '', text: '' }), 2000);
+            } else {
+                setMessage({ type: 'error', text: response.message });
+            }
+        } catch (error) {
+            setMessage({ type: 'error', text: error.message || 'Gagal mengubah username.' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSaveEmail = async () => {
+        if (!editEmail.trim()) {
+            setMessage({ type: 'error', text: 'Email tidak boleh kosong.' });
+            return;
+        }
+        if (editEmail === user?.email) {
+            setIsEditingEmail(false);
+            return;
+        }
+
+        setLoading(true);
+        setMessage({ type: '', text: '' });
+
+        try {
+            const response = await authService.updateAccount({ email: editEmail.trim() });
+            if (response.success) {
+                setMessage({ type: 'success', text: 'Email berhasil diubah!' });
+                setIsEditingEmail(false);
+                await refreshUser();
+                setTimeout(() => setMessage({ type: '', text: '' }), 2000);
+            } else {
+                setMessage({ type: 'error', text: response.message });
+            }
+        } catch (error) {
+            setMessage({ type: 'error', text: error.message || 'Gagal mengubah email.' });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleChangePassword = async (e) => {
         e.preventDefault();
         setMessage({ type: '', text: '' });
 
-        // Validation
         if (newPassword !== confirmPassword) {
             setMessage({ type: 'error', text: 'Password baru dan konfirmasi tidak cocok.' });
             return;
@@ -36,7 +113,10 @@ export default function UserProfileModal({ isOpen, onClose }) {
         setLoading(true);
 
         try {
-            const response = await authService.changePassword(currentPassword, newPassword);
+            const response = await authService.updateAccount({
+                currentPassword,
+                newPassword,
+            });
 
             if (response.success) {
                 setMessage({ type: 'success', text: 'Password berhasil diubah!' });
@@ -59,6 +139,10 @@ export default function UserProfileModal({ isOpen, onClose }) {
 
     const handleClose = () => {
         setShowChangePassword(false);
+        setIsEditingUsername(false);
+        setIsEditingEmail(false);
+        setEditUsername(user?.username || '');
+        setEditEmail(user?.email || '');
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
@@ -72,7 +156,7 @@ export default function UserProfileModal({ isOpen, onClose }) {
             onClick={handleClose}
         >
             <div
-                className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+                className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden max-h-[90vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -83,7 +167,7 @@ export default function UserProfileModal({ isOpen, onClose }) {
                         </div>
                         <div>
                             <h2 className="text-xl font-bold">Profil Pengguna</h2>
-                            <p className="text-blue-100 text-sm">Informasi akun Anda</p>
+                            <p className="text-blue-100 text-sm">Pengaturan akun Anda</p>
                         </div>
                     </div>
                     <button
@@ -96,33 +180,143 @@ export default function UserProfileModal({ isOpen, onClose }) {
 
                 {/* Content */}
                 <div className="p-6">
+                    {/* Message */}
+                    {message.text && (
+                        <div className={`mb-4 p-3 rounded-lg flex items-center gap-2 ${message.type === 'success'
+                            ? 'bg-green-50 text-green-700 border border-green-200'
+                            : 'bg-red-50 text-red-700 border border-red-200'
+                            }`}>
+                            {message.type === 'success' ? (
+                                <CheckCircle size={18} />
+                            ) : (
+                                <AlertCircle size={18} />
+                            )}
+                            <span className="text-sm">{message.text}</span>
+                        </div>
+                    )}
+
                     {/* User Info */}
                     <div className="space-y-4 mb-6">
-                        {/* Username */}
+                        {/* Username - Editable for all users */}
                         <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                            <div className="p-2 bg-blue-100 rounded-lg">
+                            <div className="p-2 bg-blue-100 rounded-lg shrink-0">
                                 <User size={20} className="text-blue-600" />
                             </div>
-                            <div>
+                            <div className="flex-1 min-w-0">
                                 <p className="text-xs text-gray-500 uppercase font-medium">Username</p>
-                                <p className="text-gray-900 font-semibold">{user?.username || '-'}</p>
+                                {isEditingUsername ? (
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <input
+                                            type="text"
+                                            value={editUsername}
+                                            onChange={(e) => setEditUsername(e.target.value)}
+                                            className="flex-1 px-2 py-1 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+                                            disabled={loading}
+                                            autoFocus
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleSaveUsername();
+                                                if (e.key === 'Escape') {
+                                                    setIsEditingUsername(false);
+                                                    setEditUsername(user?.username || '');
+                                                }
+                                            }}
+                                        />
+                                        <button
+                                            onClick={handleSaveUsername}
+                                            disabled={loading}
+                                            className="p-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                                        >
+                                            {loading ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setIsEditingUsername(false);
+                                                setEditUsername(user?.username || '');
+                                            }}
+                                            className="p-1.5 bg-gray-200 hover:bg-gray-300 text-gray-600 rounded-lg transition-colors"
+                                            disabled={loading}
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-gray-900 font-semibold">{user?.username || '-'}</p>
+                                        <button
+                                            onClick={() => setIsEditingUsername(true)}
+                                            className="p-1 hover:bg-blue-100 rounded-md transition-colors text-gray-400 hover:text-blue-600"
+                                            title="Edit username"
+                                        >
+                                            <Pencil size={14} />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         {/* Email */}
                         <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                            <div className="p-2 bg-green-100 rounded-lg">
+                            <div className="p-2 bg-green-100 rounded-lg shrink-0">
                                 <Mail size={20} className="text-green-600" />
                             </div>
-                            <div>
+                            <div className="flex-1 min-w-0">
                                 <p className="text-xs text-gray-500 uppercase font-medium">Email</p>
-                                <p className="text-gray-900 font-semibold">{user?.email || '-'}</p>
+                                {isEditingEmail ? (
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <input
+                                            type="email"
+                                            value={editEmail}
+                                            onChange={(e) => setEditEmail(e.target.value)}
+                                            className="flex-1 px-2 py-1 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"
+                                            disabled={loading}
+                                            autoFocus
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleSaveEmail();
+                                                if (e.key === 'Escape') {
+                                                    setIsEditingEmail(false);
+                                                    setEditEmail(user?.email || '');
+                                                }
+                                            }}
+                                        />
+                                        <button
+                                            onClick={handleSaveEmail}
+                                            disabled={loading}
+                                            className="p-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                                        >
+                                            {loading ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setIsEditingEmail(false);
+                                                setEditEmail(user?.email || '');
+                                            }}
+                                            className="p-1.5 bg-gray-200 hover:bg-gray-300 text-gray-600 rounded-lg transition-colors"
+                                            disabled={loading}
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-gray-900 font-semibold">{user?.email || '-'}</p>
+                                        {/* Only default admin can edit email */}
+                                        {isDefaultAdmin() && (
+                                            <button
+                                                onClick={() => setIsEditingEmail(true)}
+                                                className="p-1 hover:bg-green-100 rounded-md transition-colors text-gray-400 hover:text-green-600"
+                                                title="Edit email"
+                                            >
+                                                <Pencil size={14} />
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         {/* Role */}
                         <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                            <div className="p-2 bg-purple-100 rounded-lg">
+                            <div className="p-2 bg-purple-100 rounded-lg shrink-0">
                                 <Shield size={20} className="text-purple-600" />
                             </div>
                             <div>
@@ -155,21 +349,6 @@ export default function UserProfileModal({ isOpen, onClose }) {
                                     <Key size={16} />
                                     Ganti Password
                                 </h3>
-
-                                {/* Message */}
-                                {message.text && (
-                                    <div className={`mb-4 p-3 rounded-lg flex items-center gap-2 ${message.type === 'success'
-                                        ? 'bg-green-50 text-green-700 border border-green-200'
-                                        : 'bg-red-50 text-red-700 border border-red-200'
-                                        }`}>
-                                        {message.type === 'success' ? (
-                                            <CheckCircle size={18} />
-                                        ) : (
-                                            <AlertCircle size={18} />
-                                        )}
-                                        <span className="text-sm">{message.text}</span>
-                                    </div>
-                                )}
 
                                 {/* Current Password */}
                                 <div className="mb-3">

@@ -75,6 +75,11 @@ export function AuthProvider({ children }) {
         return user?.role === 'ADMIN';
     }, [user]);
 
+    // Check if user is the default admin (seeded, no createdById)
+    const isDefaultAdmin = useCallback(() => {
+        return user?.role === 'ADMIN' && user?.createdById === null;
+    }, [user]);
+
     // Refresh user data
     const refreshUser = useCallback(async () => {
         try {
@@ -94,6 +99,7 @@ export function AuthProvider({ children }) {
         login,
         logout,
         isAdmin,
+        isDefaultAdmin,
         refreshUser,
     };
 

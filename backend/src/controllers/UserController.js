@@ -16,6 +16,7 @@ async function getAllUsers(req, res) {
                 isActive: true,
                 createdAt: true,
                 updatedAt: true,
+                createdById: true,
                 createdBy: {
                     select: {
                         id: true,
@@ -195,6 +196,14 @@ async function updateUser(req, res) {
             return res.status(404).json({
                 success: false,
                 message: 'User not found.',
+            });
+        }
+
+        // Prevent editing default admin by other admins
+        if (existingUser.role === 'ADMIN' && existingUser.createdById === null && existingUser.id !== req.user.id) {
+            return res.status(403).json({
+                success: false,
+                message: 'Default admin account cannot be edited by other admins.',
             });
         }
 

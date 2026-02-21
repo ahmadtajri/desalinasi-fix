@@ -168,6 +168,7 @@ async function getCurrentUser(req, res) {
                 isActive: true,
                 createdAt: true,
                 updatedAt: true,
+                createdById: true, // null = default admin (seeded)
                 activeInterval: true, // Fetch the active global interval
             },
         });
@@ -181,6 +182,139 @@ async function getCurrentUser(req, res) {
         return res.status(500).json({
             success: false,
             message: 'Failed to get user info.',
+            error: error.message,
+        });
+    }
+}
+
+/**
+ * Update own account (username, email, password)
+ */
+async function updateAccount(req, res) {
+    try {
+        const userId = req.user.id;
+        const { username, email, currentPassword, newPassword } = req.body;
+
+        // At least one field must be provided
+        if (!username && !email && !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Tidak ada data yang diubah.',
+            });
+        }
+
+        // Get current user data
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User tidak ditemukan.',
+            });
+        }
+
+        // Check if user is default admin (only default admin can change email)
+        const isDefaultAdmin = user.role === 'ADMIN' && user.createdById === null;
+
+        if (email && !isDefaultAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: 'Hanya default admin yang dapat mengubah email.',
+            });
+        }
+
+        // If changing password, verify current password
+        if (newPassword) {
+            if (!currentPassword) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Password lama harus diisi untuk mengubah password.',
+                });
+            }
+
+            const isPasswordValid = await comparePassword(currentPassword, user.password);
+            if (!isPasswordValid) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Password lama tidak sesuai.',
+                });
+            }
+
+            if (newPassword.length < 6) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Password baru minimal 6 karakter.',
+                });
+            }
+        }
+
+        // Prepare update data
+        const updateData = {};
+
+        if (username && username !== user.username) {
+            // Check if username is taken
+            const existing = await prisma.user.findFirst({
+                where: { username, NOT: { id: userId } },
+            });
+            if (existing) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Username sudah digunakan.',
+                });
+            }
+            updateData.username = username;
+        }
+
+        if (email && email !== user.email) {
+            // Check if email is taken
+            const existing = await prisma.user.findFirst({
+                where: { email, NOT: { id: userId } },
+            });
+            if (existing) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email sudah digunakan.',
+                });
+            }
+            updateData.email = email;
+        }
+
+        if (newPassword) {
+            updateData.password = await hashPassword(newPassword);
+        }
+
+        if (Object.keys(updateData).length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: 'Tidak ada perubahan.',
+            });
+        }
+
+        // Update user
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: updateData,
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                role: true,
+                createdById: true,
+            },
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Akun berhasil diperbarui.',
+            data: updatedUser,
+        });
+    } catch (error) {
+        console.error('Update account error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Gagal memperbarui akun.',
             error: error.message,
         });
     }
@@ -247,6 +381,7 @@ module.exports = {
     register,
     login,
     getCurrentUser,
+    updateAccount,
     refreshToken,
     logout,
 };

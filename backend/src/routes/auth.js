@@ -11,6 +11,7 @@ router.post('/refresh', AuthController.refreshToken);
 // Protected routes
 router.post('/register', authenticate, requireAdmin, AuthController.register);
 router.get('/me', authenticate, AuthController.getCurrentUser);
+router.put('/account', authenticate, AuthController.updateAccount);
 router.post('/logout', authenticate, AuthController.logout);
 
 module.exports = router;

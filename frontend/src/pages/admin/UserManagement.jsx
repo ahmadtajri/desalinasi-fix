@@ -6,27 +6,34 @@ import {
     ChevronDown, ChevronUp, Loader2
 } from 'lucide-react';
 import CustomAlert from '../../components/shared/CustomAlert';
+import { useAuth } from '../../context/AuthContext';
 import PropTypes from 'prop-types';
 
 // Kartu Pengguna
-function UserCard({ user, onEdit, onDelete, onToggleStatus }) {
+function UserCard({ user, currentUser, onEdit, onDelete, onToggleStatus }) {
     const [expanded, setExpanded] = useState(false);
 
+    // Check if this user card is the default admin
+    const isCardDefaultAdmin = user.role === 'ADMIN' && user.createdById === null;
+    // Check if current logged-in user IS this default admin
+    const isCurrentUserThisDefaultAdmin = isCardDefaultAdmin && currentUser?.id === user.id;
+    // Show action buttons: hide all for default admin unless you ARE that default admin
+    const showActions = !isCardDefaultAdmin || isCurrentUserThisDefaultAdmin;
     return (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden transition-all hover:shadow-md">
             <div className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${user.role === 'ADMIN' ? 'bg-purple-500' : 'bg-blue-500'}`}>
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shrink-0 ${user.role === 'ADMIN' ? 'bg-purple-500' : 'bg-blue-500'}`}>
                         {user.username.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                        <h3 className="text-gray-800 font-semibold flex items-center gap-2">
-                            {user.username}
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                    <div className="min-w-0 flex-1">
+                        <h3 className="text-gray-800 font-semibold flex items-center gap-2 flex-wrap">
+                            <span className="truncate max-w-[150px] sm:max-w-none">{user.username}</span>
+                            <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                                 {user.role}
                             </span>
                         </h3>
-                        <p className="text-gray-500 text-sm">{user.email}</p>
+                        <p className="text-gray-500 text-sm truncate">{user.email}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -59,20 +66,27 @@ function UserCard({ user, onEdit, onDelete, onToggleStatus }) {
                     </div>
 
                     <div className="flex flex-wrap gap-2 pt-2">
-                        <button onClick={() => onEdit(user)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-all hover:shadow-md">
-                            <Edit2 size={14} /> Ubah
-                        </button>
-                        {/* Hide toggle & delete for default admin (seeded, no createdBy) */}
-                        {!(user.role === 'ADMIN' && !user.createdBy) && (
+                        {showActions && (
                             <>
-                                <button onClick={() => onToggleStatus(user)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:shadow-md ${user.isActive ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-green-500 hover:bg-green-600 text-white'}`}>
-                                    <Power size={14} />
-                                    {user.isActive ? 'Nonaktifkan' : 'Aktifkan'}
+                                <button onClick={() => onEdit(user)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-all hover:shadow-md">
+                                    <Edit2 size={14} /> Ubah
                                 </button>
-                                <button onClick={() => onDelete(user)} className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-all hover:shadow-md">
-                                    <Trash2 size={14} /> Hapus
-                                </button>
+                                {/* Hide toggle & delete for default admin (seeded, no createdById) */}
+                                {!(user.role === 'ADMIN' && user.createdById === null) && (
+                                    <>
+                                        <button onClick={() => onToggleStatus(user)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:shadow-md ${user.isActive ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-green-500 hover:bg-green-600 text-white'}`}>
+                                            <Power size={14} />
+                                            {user.isActive ? 'Nonaktifkan' : 'Aktifkan'}
+                                        </button>
+                                        <button onClick={() => onDelete(user)} className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-all hover:shadow-md">
+                                            <Trash2 size={14} /> Hapus
+                                        </button>
+                                    </>
+                                )}
                             </>
+                        )}
+                        {!showActions && (
+                            <span className="text-xs text-gray-400 italic">Default Admin</span>
                         )}
                     </div>
                 </div>
@@ -83,13 +97,16 @@ function UserCard({ user, onEdit, onDelete, onToggleStatus }) {
 
 UserCard.propTypes = {
     user: PropTypes.object.isRequired,
+    currentUser: PropTypes.object,
     onEdit: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
     onToggleStatus: PropTypes.func.isRequired
 };
 
 
+
 export default function UserManagement() {
+    const { user: currentUser } = useAuth();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -266,7 +283,7 @@ export default function UserManagement() {
 
             <div className="space-y-3">
                 {users.map((user) => (
-                    <UserCard key={user.id} user={user} onEdit={openEditModal} onDelete={openDeleteConfirm} onToggleStatus={handleToggleStatus} />
+                    <UserCard key={user.id} user={user} currentUser={currentUser} onEdit={openEditModal} onDelete={openDeleteConfirm} onToggleStatus={handleToggleStatus} />
                 ))}
                 {users.length === 0 && (
                     <div className="p-8 text-center text-gray-400 border border-gray-200 border-dashed rounded-xl bg-gray-50">

@@ -174,6 +174,41 @@ const authService = {
     },
 
     /**
+     * Update own account (username, email, password)
+     */
+    async updateAccount({ username, email, currentPassword, newPassword }) {
+        try {
+            const response = await api.put('/auth/account', {
+                username,
+                email,
+                currentPassword,
+                newPassword,
+            });
+
+            if (response.data.success) {
+                // Update stored user data
+                const storedUser = this.getStoredUser();
+                if (storedUser && response.data.data) {
+                    const updated = { ...storedUser, ...response.data.data };
+                    localStorage.setItem(USER_KEY, JSON.stringify(updated));
+                }
+            }
+
+            return {
+                success: response.data.success,
+                message: response.data.message,
+                data: response.data.data,
+            };
+        } catch (error) {
+            console.error('Update account error:', error);
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Gagal memperbarui akun.',
+            };
+        }
+    },
+
+    /**
      * Initialize auth - restore token to axios if exists
      */
     initAuth() {
