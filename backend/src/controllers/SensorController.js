@@ -215,7 +215,7 @@ const SensorController = {
             // Process humidity data from ESP32 cache (only if configured as humidity)
             for (const [sensorId, data] of Object.entries(cache.humidity || {})) {
                 if (sensorTypeMap[sensorId] !== 'humidity') continue;
-                realtimeData.humidity[sensorId] = data.value;
+                realtimeData.humidity[sensorId] = data.status === 'active' ? data.value : null;
                 sensorStatus.humidity[sensorId] = data.status === 'active';
             }
 
@@ -223,10 +223,10 @@ const SensorController = {
             for (const [sensorId, data] of Object.entries(cache.temperature || {})) {
                 const configuredType = sensorTypeMap[sensorId];
                 if (configuredType === 'air_temperature') {
-                    realtimeData.airTemperature[sensorId] = data.value;
+                    realtimeData.airTemperature[sensorId] = data.status === 'active' ? data.value : null;
                     sensorStatus.airTemperature[sensorId] = data.status === 'active';
                 } else if (configuredType === 'water_temperature') {
-                    realtimeData.waterTemperature[sensorId] = data.value;
+                    realtimeData.waterTemperature[sensorId] = data.status === 'active' ? data.value : null;
                     sensorStatus.waterTemperature[sensorId] = data.status === 'active';
                 }
             }
@@ -234,7 +234,7 @@ const SensorController = {
             // Process water level data (only if configured as water_level)
             for (const [sensorId, data] of Object.entries(cache.waterLevel || {})) {
                 if (sensorTypeMap[sensorId] !== 'water_level') continue;
-                realtimeData.waterLevel[sensorId] = data.value;
+                realtimeData.waterLevel[sensorId] = data.status === 'active' ? data.value : null;
                 sensorStatus.waterLevel[sensorId] = data.status === 'active';
             }
 
@@ -245,16 +245,16 @@ const SensorController = {
                 if (!configuredType) continue; // unconfigured sensor, skip
 
                 if (configuredType === 'humidity' && !(sensorId in realtimeData.humidity)) {
-                    realtimeData.humidity[sensorId] = data.value;
+                    realtimeData.humidity[sensorId] = data.status === 'active' ? data.value : null;
                     sensorStatus.humidity[sensorId] = data.status === 'active';
                 } else if (configuredType === 'air_temperature' && !(sensorId in realtimeData.airTemperature)) {
-                    realtimeData.airTemperature[sensorId] = data.value;
+                    realtimeData.airTemperature[sensorId] = data.status === 'active' ? data.value : null;
                     sensorStatus.airTemperature[sensorId] = data.status === 'active';
                 } else if (configuredType === 'water_temperature' && !(sensorId in realtimeData.waterTemperature)) {
-                    realtimeData.waterTemperature[sensorId] = data.value;
+                    realtimeData.waterTemperature[sensorId] = data.status === 'active' ? data.value : null;
                     sensorStatus.waterTemperature[sensorId] = data.status === 'active';
                 } else if (configuredType === 'water_level' && !(sensorId in realtimeData.waterLevel)) {
-                    realtimeData.waterLevel[sensorId] = data.value;
+                    realtimeData.waterLevel[sensorId] = data.status === 'active' ? data.value : null;
                     sensorStatus.waterLevel[sensorId] = data.status === 'active';
                 }
             }
@@ -264,7 +264,7 @@ const SensorController = {
                 sensorStatus,
                 pumpStatus: cache.valveStatus?.status === 'open', // Valve open = pump on
                 valveStatus: cache.valveStatus || null, // Send full valve status object
-                waterWeight: cache.waterWeight?.WW1?.value ?? null, // Get WW1 value if available
+                waterWeight: cache.waterWeight?.WW1?.status === 'active' ? (cache.waterWeight.WW1.value ?? null) : null,
                 lastUpdate: cache.lastUpdate,
                 timestamp: new Date().toISOString()
             });

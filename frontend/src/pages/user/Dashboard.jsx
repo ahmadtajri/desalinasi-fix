@@ -14,7 +14,7 @@ const Dashboard = () => {
     const { realtimeData, sensorStatus, pumpStatus, valveStatus, waterWeight } = useLogger();
 
     // Defensive check to avoid runtime errors
-    const isWaterWeightActive = waterWeight !== null && waterWeight !== undefined;
+    const isWaterWeightActive = waterWeight !== null && waterWeight !== undefined && waterWeight !== 0;
 
     // Helper function to format values to 2 decimal places
     const formatValue = (val) => {
@@ -97,7 +97,7 @@ const Dashboard = () => {
         if (allWaterTempSensors.length > 0) {
             setSelectedWaterTemp(prev => allWaterTempSensors.includes(prev) ? prev : allWaterTempSensors[0]);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [allSensorConfigs]);
 
     // Options for dropdown - now fully dynamic from sensor config
@@ -148,11 +148,16 @@ const Dashboard = () => {
         });
 
         setChartData(prev => {
+            // Only plot values for sensors that are actively connected
+            const humidActive = sensorStatus?.humidity?.[selectedHumidity];
+            const airTempActive = sensorStatus?.airTemperature?.[selectedAirTemp];
+            const waterTempActive = sensorStatus?.waterTemperature?.[selectedWaterTemp];
+
             const newPoint = {
                 time: timeString,
-                humidity: humidValue ?? prev[prev.length - 1]?.humidity ?? 0,
-                airTemp: airTempValue ?? prev[prev.length - 1]?.airTemp ?? 0,
-                waterTemp: waterTempValue ?? prev[prev.length - 1]?.waterTemp ?? 0
+                humidity: humidActive ? (humidValue ?? 0) : null,
+                airTemp: airTempActive ? (airTempValue ?? 0) : null,
+                waterTemp: waterTempActive ? (waterTempValue ?? 0) : null
             };
 
             const newHistory = [...prev, newPoint];
@@ -166,11 +171,11 @@ const Dashboard = () => {
         setChartData([]);
     }, [selectedHumidity, selectedAirTemp, selectedWaterTemp]);
 
-    // Get current values
-    const currentHumidityValue = realtimeData?.humidity?.[selectedHumidity] ?? 0;
-    const currentAirTempValue = realtimeData?.airTemperature?.[selectedAirTemp] ?? 0;
-    const currentWaterTempValue = realtimeData?.waterTemperature?.[selectedWaterTemp] ?? 0;
-    const currentWaterLevelValue = realtimeData?.waterLevel?.[selectedWaterLevel] ?? 0;
+    // Get current values — show 0 when sensor is offline to avoid displaying stale cached data
+    const currentHumidityValue = sensorStatus?.humidity?.[selectedHumidity] ? (realtimeData?.humidity?.[selectedHumidity] ?? 0) : 0;
+    const currentAirTempValue = sensorStatus?.airTemperature?.[selectedAirTemp] ? (realtimeData?.airTemperature?.[selectedAirTemp] ?? 0) : 0;
+    const currentWaterTempValue = sensorStatus?.waterTemperature?.[selectedWaterTemp] ? (realtimeData?.waterTemperature?.[selectedWaterTemp] ?? 0) : 0;
+    const currentWaterLevelValue = sensorStatus?.waterLevel?.[selectedWaterLevel] ? (realtimeData?.waterLevel?.[selectedWaterLevel] ?? 0) : 0;
 
     // Count active sensors
     const activeHumiditySensors = sensorStatus?.humidity
