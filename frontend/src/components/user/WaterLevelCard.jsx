@@ -284,7 +284,10 @@ const WaterLevelCard = ({ value, pumpStatus = false, valveStatus = null }) => {
                                         <button
                                             onClick={() => handleValveControl('on')}
                                             disabled={loading}
-                                            className="flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+                                            className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200 disabled:cursor-not-allowed ${currentValveStatus === 'open'
+                                                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200 ring-2 ring-emerald-400 scale-[1.03]'
+                                                    : 'bg-gray-100 text-gray-400 hover:bg-emerald-50 hover:text-emerald-500 disabled:opacity-50'
+                                                }`}
                                         >
                                             <Power size={18} />
                                             ON
@@ -292,7 +295,10 @@ const WaterLevelCard = ({ value, pumpStatus = false, valveStatus = null }) => {
                                         <button
                                             onClick={() => handleValveControl('off')}
                                             disabled={loading}
-                                            className="flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+                                            className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200 disabled:cursor-not-allowed ${currentValveStatus === 'closed'
+                                                    ? 'bg-red-500 text-white shadow-lg shadow-red-200 ring-2 ring-red-400 scale-[1.03]'
+                                                    : 'bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50'
+                                                }`}
                                         >
                                             <Power size={18} />
                                             OFF
