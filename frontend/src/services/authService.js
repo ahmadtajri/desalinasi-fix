@@ -71,9 +71,7 @@ const authService = {
      */
     async getCurrentUser() {
         try {
-            const response = await api.get('/auth/me', {
-                _noRetry: true // Prevent interceptor retry
-            });
+            const response = await api.get('/auth/me');
 
             if (response.data.success) {
                 const user = response.data.data;
@@ -229,11 +227,12 @@ api.interceptors.response.use(
         const originalRequest = error.config;
 
         // Skip retry for:
-        // 1. Requests with _noRetry flag
+        // 1. Requests with _noRetry flag (login, getCurrentUser initial check)
         // 2. Already retried requests
-        // 3. Auth endpoints (login, refresh, logout)
-        const isAuthEndpoint = originalRequest.url?.includes('/auth/');
-        const shouldNotRetry = originalRequest._noRetry || originalRequest._retry || isAuthEndpoint;
+        // 3. Auth endpoints that should never be retried (login, refresh, logout)
+        const noRetryEndpoints = ['/auth/login', '/auth/refresh', '/auth/logout'];
+        const isNoRetryAuthEndpoint = noRetryEndpoints.some(ep => originalRequest.url?.includes(ep));
+        const shouldNotRetry = originalRequest._noRetry || originalRequest._retry || isNoRetryAuthEndpoint;
 
         // If 401 and should retry
         if (error.response?.status === 401 && !shouldNotRetry) {

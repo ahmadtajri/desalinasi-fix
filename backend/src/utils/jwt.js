@@ -33,7 +33,10 @@ function verifyAccessToken(token) {
     try {
         return jwt.verify(token, JWT_SECRET);
     } catch (error) {
-        throw new Error('Invalid or expired token');
+        if (error.name === 'TokenExpiredError') {
+            throw new Error('Token expired');
+        }
+        throw new Error('Invalid token');
     }
 }
 
